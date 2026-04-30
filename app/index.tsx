@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
+import {ionicons} from '@expo/vector-icons'
 
 
 
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     btn: {
         width: '100%',
         padding: 16,
-        
+
         backgroundColor: 'dodgerblue',
         marginTop: 44,
         borderRadius: 8,
