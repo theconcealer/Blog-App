@@ -37,7 +37,7 @@ const Login = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Sign Up Button */}
+            {/* Log In Button */}
             <TouchableOpacity
                 style={styles.btn}
                 onPress={() => router.push('/home')}

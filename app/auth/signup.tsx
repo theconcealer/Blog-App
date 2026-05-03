@@ -65,7 +65,7 @@ const Signup = () => {
           {/* Sign Up Button */}
           <TouchableOpacity
             style={styles.btn}
-            onPress={() => router.push('/home')}
+            onPress={() => router.push('/auth/otp')}
           >
             <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: '600', color: '#f9f9f9' }}>
               Sign Up
