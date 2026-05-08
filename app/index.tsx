@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
+import {Ionicons} from '@expo/vector-icons'
 
 
 
@@ -32,7 +33,7 @@ const Index = () => {
 
                 <Text style={{textAlign: 'center', color: 'grey', fontSize: 16, fontWeight: 400, marginTop: 16,}}>Already have an account?
 
-                    <Text style={{ textDecorationLine: 'underline', color: 'dodgerblue', fontSize: 16, fontWeight: 600, }}> Log In</Text>
+                   <TouchableOpacity onPress={()=>router.push('/auth/login')}> <Text style={{ textDecorationLine: 'underline', color: 'dodgerblue', fontSize: 16, fontWeight: 600, }}> Log In</Text> </TouchableOpacity>
                 </Text>
 
 
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     btn: {
         width: '100%',
         padding: 16,
-        
+
         backgroundColor: 'dodgerblue',
         marginTop: 44,
         borderRadius: 8,

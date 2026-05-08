@@ -3,6 +3,7 @@ import { useState } from 'react'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
+import {Ionicons} from '@expo/vector-icons'
 
 
 
@@ -38,19 +39,27 @@ const Signup = () => {
           {/* Email */}
           <Text style={styles.label}>Enter Email</Text>
           <View style={styles.input}>
-            <TextInput placeholder='e.g hello@email.com' placeholderTextColor={'grey'} />
+            <Ionicons name="mail-outline" size={20} color="#7a7a7a" />
+            <TextInput placeholder='e.g hellomike@email.com' placeholderTextColor={'grey'} />
           </View>
 
           {/* Password */}
           <Text style={styles.label}>Enter Password</Text>
-          <View style={styles.input}>
+          <View style={styles.input1}>
             <TextInput placeholder='e.g ********' placeholderTextColor={'grey'} secureTextEntry />
+            <TouchableOpacity>
+              <Ionicons name="eye-off-outline" size={20} color="#7a7a7a" />
+            </TouchableOpacity>
           </View>
 
           {/* Confirm Password */}
           <Text style={styles.label}>Confirm Password</Text>
-          <View style={styles.input}>
+          <View style={styles.input1}>
             <TextInput placeholder='e.g ********' placeholderTextColor={'grey'} secureTextEntry />
+            <TouchableOpacity>
+              <Ionicons name="eye-off-outline" size={20} color="#7a7a7a" />
+            </TouchableOpacity>
+  
           </View>
 
           {/* Sign Up Button */}
@@ -65,7 +74,9 @@ const Signup = () => {
 
           <Text style={{ textAlign: 'center', color: 'grey', fontSize: 16, marginTop: 16 }}>
             Already have an account?
-            <Text style={{ textDecorationLine: 'underline', color: 'dodgerblue', fontWeight: '600' }}> Log In</Text>
+            <TouchableOpacity onPress={()=> router.push('/auth/login')}>
+              <Text style={{ textDecorationLine: 'underline', color: 'dodgerblue', fontWeight: '600' }}> Log In</Text>
+            </TouchableOpacity>
           </Text>
 
         </ScrollView>
@@ -86,7 +97,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 80,
     lineHeight: 36,
-    color: '#065291'
+    color: '#1e1e1e'
   },
   label: {
     marginTop: 28,
@@ -99,8 +110,21 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginTop: 8,
-    borderColor: '#adaeb0'
+    borderColor: '#adaeb0',
+    gap: 8,
+    flexDirection:'row'
   },
+
+  input1: {
+    borderWidth: 1,
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 8,
+    borderColor: '#adaeb0',
+    justifyContent: 'space-between',
+    flexDirection:'row'
+  },
+
   btn: {
     width: '100%',
     padding: 16,
