@@ -7,14 +7,14 @@ import { useRouter } from 'expo-router'
 const Profile = () => {
     const router = useRouter()
 
-    // ✅ State for username and edit mode
+    //  State for username and edit mode
     const [username, setUsername] = useState('GhostWriter')
     const [tempUsername, setTempUsername] = useState(username)
     const [isEditing, setIsEditing] = useState(false)
     const email = 'mndubuisi1000@gmail.com'  // email is fixed, no state needed
 
     const handleEdit = () => {
-        setIsEditing(true)  // ✅ enables editing
+        setIsEditing(true)  //  enables editing
     }
 
     const handleUpdate = () => {
@@ -22,13 +22,13 @@ const Profile = () => {
             Alert.alert('Error', 'Username cannot be empty')
             return
         }
-        setUsername(tempUsername)   // ✅ saves the new username
-        setIsEditing(false)         // ✅ exits edit mode
+        setUsername(tempUsername)   //  saves the new username
+        setIsEditing(false)         //  exits edit mode
         Alert.alert('Success', 'Profile updated successfully!')
     }
 
     const handleCancel = () => {
-        setTempUsername(username)   // ✅ resets to original if cancelled
+        setTempUsername(username)   //  resets to original if cancelled
         setIsEditing(false)
     }
 
@@ -71,7 +71,7 @@ const Profile = () => {
                         style={styles.input}
                         value={tempUsername}
                         onChangeText={setTempUsername}
-                        editable={isEditing}        // ✅ only editable when edit icon is tapped
+                        editable={isEditing}        //  only editable when edit icon is tapped
                         placeholder='Enter username'
                         placeholderTextColor='#a0a0a0'
                     />
@@ -91,7 +91,7 @@ const Profile = () => {
                     <TextInput
                         style={[styles.input, { color: '#a0a0a0' }]}
                         value={email}
-                        editable={false}    // ✅ always locked
+                        editable={false}    //  always locked
                     />
                     <Ionicons name='lock-closed-outline' size={18} color='#a0a0a0' />
                 </View>
