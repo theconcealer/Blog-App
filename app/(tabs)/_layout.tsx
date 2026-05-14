@@ -32,24 +32,24 @@ export default function TabLayout() {
 
  <Tabs.Screen name="home" options={{
     headerShown: false,
-    tabBarIcon: ({size, color}) => <FontAwesome name = "home" size={size} color={color} />
+    tabBarIcon: ({size, color}) => <Ionicons name = "home" size={size} color={color} />
  }} />
 
  <Tabs.Screen name="search" options={{
     headerShown: false,
-    tabBarIcon: ({size, color}) => <FontAwesome name = "search" size={size} color={color} />
+    tabBarIcon: ({size, color}) => <Ionicons name = "search" size={size} color={color} />
  }} />
 
 
  <Tabs.Screen name="saved" options={{
     headerShown: false,
-    tabBarIcon: ({size, color}) => <FontAwesome name = "bookmark" size={size} color={color} />
+    tabBarIcon: ({size, color}) => <Ionicons name = "bookmark-outline" size={size} color={color} />
  }} />
 
 
- <Tabs.Screen name="profile" options={{
+ <Tabs.Screen name="settings" options={{
     headerShown: false,
-    tabBarIcon: ({size, color}) => <FontAwesome name = "user" size={size} color={color} />
+    tabBarIcon: ({size, color}) => <Ionicons name = "settings-outline" size={size} color={color} />
  }} />
 
 

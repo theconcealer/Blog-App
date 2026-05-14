@@ -1,5 +1,6 @@
 
 import { Stack } from 'expo-router'
+import modal from './modal'
 
 export default function Rootlayout()  {
   return (
@@ -11,6 +12,10 @@ export default function Rootlayout()  {
       <Stack.Screen name="(tabs)" options={{headerShown: false}}/>
 
       <Stack.Screen name="auth" options={{headerShown: false}}/>
+
+      <Stack.Screen name="modal" options={{headerShown: false, presentation: "transparentModal",}}/>
+
+
 
     </Stack>
   )

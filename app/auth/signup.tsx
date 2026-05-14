@@ -7,10 +7,16 @@ import { Ionicons } from '@expo/vector-icons'
 import { registerUser } from '@/services/authService'
 import { saveTokens } from '@/services/tokenStorage'
 
+// ✅ Global state import
+import { useUserStore } from '@/store/useUserStore'
+
 const Signup = () => {
   const router = useRouter()
 
-  // ✅ Form state
+  // ✅ Get setUser from global store
+  const setUser = useUserStore((state) => state.setUser)
+
+  // Form state
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,7 +28,7 @@ const Signup = () => {
 
   const handleSignup = async () => {
 
-    // ✅ Basic validation
+    // Basic validation
     if (!username || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields')
       return
@@ -36,17 +42,19 @@ const Signup = () => {
     try {
       setLoading(true)
 
-      // ✅ Call the API
+      // Call the API
       const response = await registerUser(username, email, password)
 
-      // ✅ Save tokens to storage
+      // Save tokens to storage
       await saveTokens(response.accessToken, response.refreshToken)
 
-      // ✅ Navigate to OTP screen after signup
+      // ✅ Save user to global store — now available everywhere in the app
+      setUser(response.user)
+
+      // Navigate to login after signup
       router.replace('/auth/login')
 
     } catch (error: any) {
-      // ✅ Show error message from API
       Alert.alert('Signup Failed', error.message)
     } finally {
       setLoading(false)
@@ -111,13 +119,12 @@ const Signup = () => {
               style={{ flex: 1 }}
               placeholder='e.g ********'
               placeholderTextColor='grey'
-              secureTextEntry={!showPassword}   // ✅ toggles visibility
+              secureTextEntry={!showPassword}
               value={password}
               onChangeText={setPassword}
               onFocus={() => setFocusedInput('password')}
               onBlur={() => setFocusedInput(null)}
             />
-            {/* ✅ Eye icon toggles password visibility */}
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Ionicons
                 name={showPassword ? 'eye-outline' : 'eye-off-outline'}
@@ -137,13 +144,12 @@ const Signup = () => {
               style={{ flex: 1 }}
               placeholder='e.g ********'
               placeholderTextColor='grey'
-              secureTextEntry={!showConfirmPassword}   // ✅ toggles visibility
+              secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               onFocus={() => setFocusedInput('confirmPassword')}
               onBlur={() => setFocusedInput(null)}
             />
-            {/* ✅ Eye icon toggles confirm password visibility */}
             <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
               <Ionicons
                 name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
@@ -159,7 +165,6 @@ const Signup = () => {
             onPress={handleSignup}
             disabled={loading}
           >
-            {/* ✅ Shows spinner while API call is running */}
             {loading
               ? <ActivityIndicator color='#fff' />
               : <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: '600', color: '#f9f9f9' }}>

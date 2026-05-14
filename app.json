@@ -4,12 +4,16 @@
     "slug": "BlogApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/blogAppIcon.png",
     "scheme": "blogapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.desgnmikee.BlogApp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,19 +23,20 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.desgnmikee.BlogApp"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/nakedBlogIcon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "image": "..assets/images/nakedBlogIcon.png",
+          "imageWidth": 52,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
@@ -43,6 +48,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "296a84ba-b472-4adf-84c7-1f180cf235bf"
+      }
     }
   }
 }

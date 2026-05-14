@@ -13,7 +13,7 @@ const saved = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Ionicons name='chevron-back-outline' size={24} color='dodgerblue' />
+          {/* <Ionicons name='chevron-back-outline' size={24} color='dodgerblue' /> */}
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Saved Posts</Text>
         <View style={{ width: 24 }} />

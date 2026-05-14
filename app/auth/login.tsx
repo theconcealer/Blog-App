@@ -6,10 +6,16 @@ import { Ionicons } from '@expo/vector-icons'
 import { loginUser } from '@/services/authService'
 import { saveTokens } from '@/services/tokenStorage'
 
+// ✅ Global state import
+import { useUserStore } from '@/store/useUserStore'
+
 const Login = () => {
     const router = useRouter()
 
-    // ✅ Form state
+    // ✅ Get setUser from global store
+    const setUser = useUserStore((state) => state.setUser)
+
+    // Form state
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -18,7 +24,7 @@ const Login = () => {
 
     const handleLogin = async () => {
 
-        // ✅ Basic validation
+        // Basic validation
         if (!email || !password) {
             Alert.alert('Error', 'Please fill in all fields')
             return
@@ -27,17 +33,19 @@ const Login = () => {
         try {
             setLoading(true)
 
-            // ✅ Call the API
+            // Call the API
             const response = await loginUser(email, password)
 
-            // ✅ Save tokens to storage
+            // Save tokens to storage
             await saveTokens(response.accessToken, response.refreshToken)
 
-            // ✅ Navigate to home after successful login
+            // ✅ Save user to global store — now available everywhere in the app
+            setUser(response.user)
+
+            // Navigate to home after successful login
             router.replace('/(tabs)/home')
 
         } catch (error: any) {
-            // ✅ Show error message from API
             Alert.alert('Login Failed', error.message)
         } finally {
             setLoading(false)
@@ -97,13 +105,12 @@ const Login = () => {
                             style={{ flex: 1 }}
                             placeholder='e.g ********'
                             placeholderTextColor='grey'
-                            secureTextEntry={!showPassword}  // ✅ toggles visibility
+                            secureTextEntry={!showPassword}
                             value={password}
                             onChangeText={setPassword}
                             onFocus={() => setFocusedInput('password')}
                             onBlur={() => setFocusedInput(null)}
                         />
-                        {/* ✅ Eye icon now toggles password visibility */}
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                             <Ionicons
                                 name={showPassword ? 'eye-outline' : 'eye-off-outline'}
@@ -119,7 +126,6 @@ const Login = () => {
                         onPress={handleLogin}
                         disabled={loading}
                     >
-                        {/* ✅ Shows spinner while API call is running */}
                         {loading
                             ? <ActivityIndicator color='#fff' />
                             : <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: '600', color: '#f9f9f9' }}>

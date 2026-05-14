@@ -5,7 +5,14 @@ import { Animated, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, u
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 
+import { useUserStore } from '@/store/useUserStore'
+
+
+
 const Explore = () => {
+
+  const user = useUserStore((state) => state.user)
+
   const { height, width } = useWindowDimensions();
   const router = useRouter()
 
@@ -23,7 +30,7 @@ const Explore = () => {
         duration: 300,
         useNativeDriver: true,
       }),
-      
+
       //  Hold for 3 seconds
       Animated.delay(3000),
 
@@ -39,12 +46,32 @@ const Explore = () => {
   }
 
   const styles = StyleSheet.create({
-    circle: {
-      backgroundColor: '#a8a9aa',
-      width: 45,
-      height: 45,
-      borderRadius: 1000,
-      overflow: 'hidden',
+
+
+    headerContainer: {
+      width: '100%',
+      // borderWidth: 1,
+      height: 60,
+      flexDirection: 'row',
+      justifyContent: 'space-between'
+
+    },
+
+    profileImage: {
+      width: 250,
+      height: '100%',
+      // borderWidth: 2,
+      justifyContent: 'space-between',
+      flexDirection: 'row'
+    },
+
+    iconContainer: {
+      width: 60,
+      height: '100%',
+      backgroundColor: 'dodgerblue',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 100,
     },
 
     text: {
@@ -67,11 +94,6 @@ const Explore = () => {
       fontWeight: '500',
     },
 
-    notification: {
-      width: 65,
-      marginLeft: 44,
-      borderRadius: 1000,
-    },
 
     homeSearch: {
       borderWidth: 0.5,
@@ -79,7 +101,7 @@ const Explore = () => {
       backgroundColor: '#edf1f6',
       width: '100%',
       height: 40,
-      borderRadius: 100,
+      borderRadius: 10,
       marginTop: 24,
       paddingHorizontal: 16,
       flexDirection: 'row',
@@ -169,7 +191,7 @@ const Explore = () => {
       shadowOpacity: 0.15,
       shadowRadius: 10,
       elevation: 10,
-      marginTop:52,
+      marginTop: 52,
     },
 
     toastText: {
@@ -199,32 +221,60 @@ const Explore = () => {
         </Animated.View>
       )}
 
-      <View style={{ height: 65, width: 272, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
 
-        {/* Profile Image */}
-        <View style={styles.circle}>
-          <Image
-            source={require('@/assets/images/Man Potrait Image.jpg')}
-            style={{ width: 45, height: 45 }}
-          />
+
+      {/* Header Display */}
+      <View style={styles.headerContainer}>
+
+        <View style={styles.profileImage}>
+
+          {/* Profile image container */}
+          <TouchableOpacity
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 100,
+              overflow: 'hidden',   // ✅ clips image into circle
+            }}
+            onPress={() => router.push('/modal')}
+          >
+            <Image
+              source={require('@/assets/images/Man Potrait Image.jpg')}
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            />
+          </TouchableOpacity>
+
+          {/* Container: Name & welcome message */}
+          <View style={{
+            width: '72%',
+            height: '100%',
+            // borderWidth: 1,
+            paddingVertical: 4,
+            flexDirection: 'column',
+            gap: 4,
+          }}>
+
+            <Text style={styles.name}>{user?.username}</Text>
+            <Text style={styles.message}>Write magic today!</Text>
+
+          </View>
+
         </View>
 
-        <View style={styles.text}>
-          <Text style={styles.name}>Welcome back, Mikee</Text>
-          <Text style={styles.message}>Let your voice be heard today</Text>
+        <TouchableOpacity >
+        <View style={styles.iconContainer}>
+          <Ionicons name='add' size={24} color={'#f9f9f9'} />
         </View>
-
-        {/* Notification Icon */}
-        <View style={styles.notification}>
-          <Ionicons
-            name='notifications-outline'
-            size={28}
-            color={'#5d5e62'}
-            style={{ margin: 'auto' }}
-          />
-        </View>
+        </TouchableOpacity>
 
       </View>
+
+
+
+
 
       {/* Search bar */}
       <View style={styles.homeSearch}>
@@ -246,7 +296,7 @@ const Explore = () => {
               style={{ width: 45, height: 45, borderRadius: 100 }}
             />
             <Text style={{ fontSize: 16, fontWeight: '600', lineHeight: 24, color: '#3e3f40' }}>
-              GhostWriter
+              {user?.username}
             </Text>
           </View>
 
