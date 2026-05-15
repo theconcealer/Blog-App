@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import UsernameEmail from '@/components/UsernameEmail'
@@ -24,7 +24,16 @@ const settings = () => {
 
 
         {/* Profile Image */}
-        <View></View>
+        <View style={styles.profileImg}>
+          <Image
+            source={require('@/assets/images/Man Potrait Image.jpg')}
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 100,
+            }}
+          />
+        </View>
 
         {/* Username & Email*/}
         <UsernameEmail
@@ -58,7 +67,7 @@ const settings = () => {
           <Text style={{
             color: 'tomato', fontSize: 16, lineHeight: 24, fontWeight: 600,
           }}>Log Out</Text>
-          <Ionicons name='log-out-outline' size={24} color={'#e68383'}/>
+          <Ionicons name='log-out-outline' size={24} color={'#e68383'} />
         </TouchableOpacity>
 
 
@@ -89,12 +98,23 @@ const styles = StyleSheet.create({
     color: '#1e1e1e',
   },
 
+  profileImg: {
+    width: 72,
+    height: 72,
+    shadowColor: '#030c25',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+    borderRadius: 100,
+  },
+
   container: {
     padding: 16,
     flex: 1,
   },
 
-  btnLogout:{
+  btnLogout: {
     marginTop: 40,
     justifyContent: 'center',
     alignItems: 'center',

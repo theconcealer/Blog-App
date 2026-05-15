@@ -79,7 +79,11 @@ const Signup = () => {
           ]}>
             <Ionicons name="person-outline" size={20} color="#7a7a7a" />
             <TextInput
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                padding: 0,                          //removes Android's extra padding
+                includeFontPadding: false,
+              }}
               placeholder='e.g TheConcealer'
               placeholderTextColor='grey'
               value={username}
@@ -97,7 +101,11 @@ const Signup = () => {
           ]}>
             <Ionicons name="mail-outline" size={20} color="#7a7a7a" />
             <TextInput
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                padding: 0,                          //removes Android's extra padding
+                includeFontPadding: false,
+              }}
               placeholder='e.g hellomike@email.com'
               placeholderTextColor='grey'
               keyboardType='email-address'
@@ -116,7 +124,11 @@ const Signup = () => {
             { borderColor: focusedInput === 'password' ? 'dodgerblue' : '#adaeb0' }
           ]}>
             <TextInput
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                padding: 0,                          //removes Android's extra padding
+                includeFontPadding: false,
+              }}
               placeholder='e.g ********'
               placeholderTextColor='grey'
               secureTextEntry={!showPassword}
@@ -141,7 +153,11 @@ const Signup = () => {
             { borderColor: focusedInput === 'confirmPassword' ? 'dodgerblue' : '#adaeb0' }
           ]}>
             <TextInput
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                padding: 0,                          //removes Android's extra padding
+                includeFontPadding: false,
+              }}
               placeholder='e.g ********'
               placeholderTextColor='grey'
               secureTextEntry={!showConfirmPassword}
@@ -168,8 +184,8 @@ const Signup = () => {
             {loading
               ? <ActivityIndicator color='#fff' />
               : <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: '600', color: '#f9f9f9' }}>
-                  Sign Up
-                </Text>
+                Sign Up
+              </Text>
             }
           </TouchableOpacity>
 

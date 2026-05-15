@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
+
+
 // Props for username and email in settings
 type Props = {
   username: string,
@@ -29,8 +31,8 @@ const styles = StyleSheet.create({
 
     username:{
         width: 'auto',
-        fontSize: 16,
-        lineHeight: 24,
+        fontSize: 18,
+        lineHeight: 27,
         fontWeight: 600,
         color: '#1e1e1e',
     },

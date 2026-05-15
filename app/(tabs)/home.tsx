@@ -66,8 +66,8 @@ const Explore = () => {
     },
 
     iconContainer: {
-      width: 60,
-      height: '100%',
+      width: 52,
+      height: 52,
       backgroundColor: 'dodgerblue',
       alignItems: 'center',
       justifyContent: 'center',
@@ -264,10 +264,13 @@ const Explore = () => {
 
         </View>
 
-        <TouchableOpacity >
-        <View style={styles.iconContainer}>
-          <Ionicons name='add' size={24} color={'#f9f9f9'} />
-        </View>
+        {/* Create a post: Quick add */}
+        <TouchableOpacity 
+          onPress={()=> router.push('/createPost')}
+        >
+          <View style={styles.iconContainer}>
+            <Ionicons name='add' size={24} color={'#f9f9f9'} />
+          </View>
         </TouchableOpacity>
 
       </View>
@@ -280,7 +283,12 @@ const Explore = () => {
       <View style={styles.homeSearch}>
         <Ionicons name='search' size={20} color={'#808289'} />
         <TextInput
-          style={{ width: '100%' }}
+          style={{
+            width: '100%',
+            flex: 1,
+            padding: 0,  //removes Android's extra padding
+            includeFontPadding: false,
+          }}
           placeholder='search title here'
           placeholderTextColor={'#808289'}
         />
