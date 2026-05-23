@@ -35,10 +35,10 @@ export default function TabLayout() {
     tabBarIcon: ({size, color}) => <Ionicons name = "home" size={size} color={color} />
  }} />
 
- <Tabs.Screen name="search" options={{
+ {/* <Tabs.Screen name="search" options={{
     headerShown: false,
     tabBarIcon: ({size, color}) => <Ionicons name = "search" size={size} color={color} />
- }} />
+ }} /> */}
 
 
  <Tabs.Screen name="saved" options={{

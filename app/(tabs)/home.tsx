@@ -2,11 +2,15 @@
 
 import { Ionicons } from '@expo/vector-icons'
 import React, { useEffect, useRef, useState } from 'react'
-import { Animated, Alert, FlatList, Image, Platform, ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, Share, useWindowDimensions } from 'react-native'
+import { Animated, Alert, FlatList, Platform, ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, Share, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useUserStore } from '@/store/useUserStore'
 import { getPosts, Post, savePost, unsavePost, likePost, unlikePost, sharePost, deletePost } from '@/services/postService'
+
+// ✅ ProfileAvatar import
+import ProfileAvatar from '@/components/profileAvatar'
+import { Image } from 'react-native'
 
 const Explore = () => {
     const user = useUserStore((state) => state.user)
@@ -18,11 +22,7 @@ const Explore = () => {
     const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set())
     const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
     const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
-
-    // ✅ Search state
     const [searchQuery, setSearchQuery] = useState('')
-
-    // ✅ Two separate toasts
     const [showSaveToast, setShowSaveToast] = useState(false)
     const [showDeleteToast, setShowDeleteToast] = useState(false)
     const saveSlideAnim = useRef(new Animated.Value(-100)).current
@@ -55,13 +55,11 @@ const Explore = () => {
         }
     }
 
-    // ✅ Filter posts by title or authorName based on searchQuery
     const filteredPosts = posts.filter(post =>
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.authorName.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    // ─── SAVE / UNSAVE ────────────────────────────────────────────────────────
     const handleSavePost = async (postId: string) => {
         const isSaved = savedPostIds.has(postId)
         try {
@@ -86,7 +84,6 @@ const Explore = () => {
         }
     }
 
-    // ─── DELETE ───────────────────────────────────────────────────────────────
     const handleDeletePost = (postId: string) => {
         Alert.alert(
             'Delete Post',
@@ -110,7 +107,6 @@ const Explore = () => {
         )
     }
 
-    // ─── LIKE ─────────────────────────────────────────────────────────────────
     const handleLikePost = async (postId: string) => {
         const isLiked = likedPostIds.has(postId)
         try {
@@ -136,7 +132,6 @@ const Explore = () => {
         }
     }
 
-    // ─── SHARE ────────────────────────────────────────────────────────────────
     const handleSharePost = async (postId: string, postTitle: string) => {
         try {
             await sharePost(postId, 'Loved this — had to share.')
@@ -152,7 +147,6 @@ const Explore = () => {
         }
     }
 
-    // ─── AUTH ERROR ───────────────────────────────────────────────────────────
     const handleAuthError = (error: any) => {
         if (error.message.includes('token') || error.message.includes('expired')) {
             Alert.alert('Session Expired', 'Please log in again', [
@@ -163,7 +157,6 @@ const Explore = () => {
         }
     }
 
-    // ─── TOASTS ───────────────────────────────────────────────────────────────
     const triggerSaveToast = () => {
         setShowSaveToast(true)
         Animated.sequence([
@@ -182,10 +175,7 @@ const Explore = () => {
         ]).start(() => setShowDeleteToast(false))
     }
 
-    // ─── POST CARD ────────────────────────────────────────────────────────────
     const renderPost = ({ item }: { item: Post }) => {
-
-        // ✅ Check if this post belongs to the logged in user
         const isMyPost = item.authorId === user?.id
 
         return (
@@ -196,25 +186,19 @@ const Explore = () => {
                 <View style={styles.card}>
                     <View style={styles.cont}>
                         <View style={styles.username}>
-                            <View style={{
-                                width: 45, height: 45,
-                                borderRadius: 100,
-                                overflow: 'hidden',
-                                backgroundColor: '#d1d1d1'
-                            }}>
-                                <Image
-                                    source={require('@/assets/images/Man Potrait Image.jpg')}
-                                    style={{ width: '100%', height: '100%' }}
-                                />
-                            </View>
+
+                            {/* ✅ Show MY profile pic on MY posts, default icon on others */}
+                            <ProfileAvatar
+                                uri={isMyPost ? user?.profilePicUrl : null}
+                                size={45}
+                            />
+
                             <Text style={{ fontSize: 16, fontWeight: '600', lineHeight: 24, color: '#3e3f40' }}>
                                 {item.authorName}
                             </Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-
-                            {/* Bookmark */}
                             <TouchableOpacity
                                 onPress={(e) => {
                                     e.stopPropagation()
@@ -228,7 +212,6 @@ const Explore = () => {
                                 />
                             </TouchableOpacity>
 
-                            {/* ✅ Delete icon — only shows on YOUR posts */}
                             {isMyPost && (
                                 <TouchableOpacity
                                     onPress={(e) => {
@@ -239,7 +222,6 @@ const Explore = () => {
                                     <Ionicons name='trash-outline' size={24} color='tomato' />
                                 </TouchableOpacity>
                             )}
-
                         </View>
                     </View>
 
@@ -269,7 +251,6 @@ const Explore = () => {
                     ) : null}
 
                     <View style={{ padding: 8, flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-
                         <View style={styles.views}>
                             <Ionicons name='eye-outline' size={24} color='dodgerblue' />
                             <Text>{item.viewCount}</Text>
@@ -302,7 +283,6 @@ const Explore = () => {
                             <Ionicons name='share-outline' size={24} color='dodgerblue' />
                             <Text>{item.shareCount}</Text>
                         </TouchableOpacity>
-
                     </View>
                 </View>
             </TouchableOpacity>
@@ -312,7 +292,7 @@ const Explore = () => {
     return (
         <SafeAreaView style={{ padding: 16, flex: 1 }}>
 
-            {/* Save Toast — green */}
+            {/* Save Toast */}
             {showSaveToast && (
                 <Animated.View style={[styles.toast, styles.saveToast, { transform: [{ translateY: saveSlideAnim }] }]}>
                     <Text style={styles.toastText}>Post saved successfully</Text>
@@ -322,7 +302,7 @@ const Explore = () => {
                 </Animated.View>
             )}
 
-            {/* Delete Toast — tomato */}
+            {/* Delete Toast */}
             {showDeleteToast && (
                 <Animated.View style={[styles.toast, styles.deleteToast, { transform: [{ translateY: deleteSlideAnim }] }]}>
                     <Text style={styles.toastText}>Post deleted successfully</Text>
@@ -332,15 +312,10 @@ const Explore = () => {
             {/* Header */}
             <View style={styles.headerContainer}>
                 <View style={styles.profileImage}>
-                    <TouchableOpacity
-                        style={{ width: 60, height: 60, borderRadius: 100, overflow: 'hidden' }}
-                        onPress={() => router.push('/modal')}
-                        activeOpacity={0.8}
-                    >
-                        <Image
-                            source={require('@/assets/images/Man Potrait Image.jpg')}
-                            style={{ width: '100%', height: '100%' }}
-                        />
+
+                    {/* ✅ Logged in user's profile pic in header */}
+                    <TouchableOpacity onPress={() => router.push('/modal')} activeOpacity={0.8}>
+                        <ProfileAvatar uri={user?.profilePicUrl} size={60} />
                     </TouchableOpacity>
 
                     <View style={{ width: '72%', height: '100%', paddingVertical: 4, flexDirection: 'column', gap: 4 }}>
@@ -356,7 +331,7 @@ const Explore = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* ✅ Search bar — now functional */}
+            {/* Search bar */}
             <View style={styles.homeSearch}>
                 <Ionicons name='search' size={20} color='#808289' />
                 <TextInput
@@ -364,9 +339,8 @@ const Explore = () => {
                     placeholder='search by title or username...'
                     placeholderTextColor='#808289'
                     value={searchQuery}
-                    onChangeText={setSearchQuery}   // ✅ updates searchQuery as user types
+                    onChangeText={setSearchQuery}
                 />
-                {/* ✅ Clear button — shows when user has typed something */}
                 {searchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setSearchQuery('')}>
                         <Ionicons name='close-circle' size={18} color='#808289' />
@@ -374,19 +348,17 @@ const Explore = () => {
                 )}
             </View>
 
-            {/* ✅ Show search result count when searching */}
             {searchQuery.length > 0 && (
                 <Text style={{ color: '#6a6a6a', fontSize: 13, marginBottom: 8, marginTop: 4 }}>
                     {filteredPosts.length} result{filteredPosts.length !== 1 ? 's' : ''} for "{searchQuery}"
                 </Text>
             )}
 
-            {/* Posts — uses filteredPosts instead of posts */}
             {loadingPosts ? (
                 <ActivityIndicator size='large' color='dodgerblue' style={{ marginTop: 48 }} />
             ) : (
                 <FlatList
-                    data={filteredPosts}     // ✅ filtered list — not raw posts
+                    data={filteredPosts}
                     keyExtractor={(item) => item.id}
                     renderItem={renderPost}
                     showsVerticalScrollIndicator={false}
@@ -425,6 +397,7 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'space-between',
         flexDirection: 'row',
+        alignItems: 'center',
     },
     iconContainer: {
         width: 52,
@@ -463,7 +436,7 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     username: { flexDirection: 'row', gap: 12, alignItems: 'center', overflow: 'hidden' },
-    cont: { flexDirection: 'row', justifyContent: 'space-between' },
+    cont: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     title: { fontSize: 16, lineHeight: 24, fontWeight: '700', marginTop: 16 },
     body: { fontSize: 16, lineHeight: 24, fontWeight: '400', marginTop: 16, color: '#636567' },
     views: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -487,14 +460,8 @@ const styles = StyleSheet.create({
         elevation: 10,
         marginTop: 52,
     },
-    saveToast: {
-        backgroundColor: 'green',
-        justifyContent: 'space-between',
-    },
-    deleteToast: {
-        backgroundColor: 'tomato',
-        justifyContent: 'center',
-    },
+    saveToast: { backgroundColor: 'green', justifyContent: 'space-between' },
+    deleteToast: { backgroundColor: 'tomato', justifyContent: 'center' },
     toastText: { color: '#ffffff', fontSize: 14, fontWeight: '500' },
     toastCTA: { color: '#f9f9f9', fontSize: 14, fontWeight: '700' },
 })

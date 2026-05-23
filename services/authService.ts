@@ -1,7 +1,7 @@
 // services/authService.ts
 
 import { apiRequest } from './api'
-import { getRefreshToken, saveTokens, clearTokens } from './tokenStorage'
+import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from './tokenStorage'
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 export interface AuthResponse {
@@ -87,4 +87,46 @@ export const refreshAccessToken = async (): Promise<RefreshTokenResponse> => {
     await saveTokens(response.accessToken, response.refreshToken)
 
     return response
+}
+
+// ─── UPDATE PROFILE PICTURE ───────────────────────────────────────────────────
+export const updateProfilePic = async (imageUri: string): Promise<{
+    message: string
+    user: {
+        id: string
+        username: string
+        email: string
+        profilePicUrl: string
+    }
+}> => {
+    const token = await getAccessToken()
+
+    // ✅ FormData for binary image upload
+    const formData = new FormData()
+    const filename = imageUri.split('/').pop() || 'profile.jpg'
+    const match = /\.(\w+)$/.exec(filename)
+    const type = match ? `image/${match[1]}` : 'image/jpeg'
+
+    formData.append('image', {
+        uri: imageUri,
+        name: filename,
+        type,
+    } as any)
+
+    const response = await fetch('https://blog-api-ten-eosin.vercel.app/api/auth/profile-pic', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            // ✅ Don't set Content-Type manually for FormData
+        },
+        body: formData,
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile picture')
+    }
+
+    return data
 }

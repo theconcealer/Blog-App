@@ -9,6 +9,9 @@ import { useFocusEffect } from '@react-navigation/native'
 import { getSavedPosts, Post, unsavePost, deletePost } from '@/services/postService'
 import { useUserStore } from '@/store/useUserStore'
 
+// ✅ ProfileAvatar import
+import ProfileAvatar from '@/components/profileAvatar'
+
 const Saved = () => {
     const router = useRouter()
     const { height } = useWindowDimensions()
@@ -16,7 +19,6 @@ const Saved = () => {
 
     const [savedPosts, setSavedPosts] = useState<Post[]>([])
     const [loading, setLoading] = useState(false)
-
     const [showDeleteToast, setShowDeleteToast] = useState(false)
     const deleteSlideAnim = useRef(new Animated.Value(-100)).current
 
@@ -80,37 +82,32 @@ const Saved = () => {
     }
 
     const renderSavedPost = ({ item }: { item: Post }) => {
-
-        // ✅ Check if this saved post belongs to the logged in user
         const isMyPost = item.authorId === user?.id
 
         return (
             <View style={styles.card}>
                 <View style={styles.cont}>
                     <View style={styles.authorRow}>
-                        <View style={styles.avatarCircle}>
-                            <Image
-                                source={require('@/assets/images/Man Potrait Image.jpg')}
-                                style={{ width: '100%', height: '100%' }}
-                            />
-                        </View>
+
+                        {/* ✅ Show MY profile pic on MY saved posts, default icon on others */}
+                        <ProfileAvatar
+                            uri={isMyPost ? user?.profilePicUrl : null}
+                            size={40}
+                        />
+
                         <Text style={styles.authorName}>{item.authorName}</Text>
                     </View>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-
-                        {/* Unsave */}
                         <TouchableOpacity onPress={() => handleUnsavePost(item.id)}>
                             <Ionicons name='bookmark' size={24} color='dodgerblue' />
                         </TouchableOpacity>
 
-                        {/* ✅ Delete — only shows on YOUR saved posts */}
                         {isMyPost && (
                             <TouchableOpacity onPress={() => handleDeletePost(item.id)}>
                                 <Ionicons name='trash-outline' size={24} color='tomato' />
                             </TouchableOpacity>
                         )}
-
                     </View>
                 </View>
 
@@ -159,7 +156,7 @@ const Saved = () => {
     return (
         <SafeAreaView style={styles.container}>
 
-            {/* ✅ Delete Toast */}
+            {/* Delete Toast */}
             {showDeleteToast && (
                 <Animated.View style={[styles.toast, { transform: [{ translateY: deleteSlideAnim }] }]}>
                     <Text style={styles.toastText}>Post deleted successfully</Text>
@@ -221,7 +218,6 @@ const styles = StyleSheet.create({
     },
     cont: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     authorRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    avatarCircle: { width: 40, height: 40, borderRadius: 100, overflow: 'hidden', backgroundColor: '#d1d1d1' },
     authorName: { fontSize: 15, fontWeight: '600', color: '#3e3f40' },
     title: { fontSize: 16, lineHeight: 24, fontWeight: '700', marginTop: 16, color: '#1e1e1e' },
     body: { fontSize: 15, lineHeight: 24, fontWeight: '400', marginTop: 8, color: '#636567' },
@@ -235,9 +231,7 @@ const styles = StyleSheet.create({
     browseBtnText: { color: '#ffffff', fontWeight: '600', fontSize: 14 },
     toast: {
         position: 'absolute',
-        top: 0,
-        left: 16,
-        right: 16,
+        top: 0, left: 16, right: 16,
         backgroundColor: 'tomato',
         borderRadius: 12,
         paddingVertical: 24,
