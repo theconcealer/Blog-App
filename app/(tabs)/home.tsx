@@ -6,27 +6,27 @@ import { Animated, Alert, FlatList, Image, Platform, ActivityIndicator, StyleShe
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { useUserStore } from '@/store/useUserStore'
-import { getPosts, Post, savePost, likePost, unlikePost, sharePost } from '@/services/postService'
+import { getPosts, Post, savePost, unsavePost, likePost, unlikePost, sharePost, deletePost } from '@/services/postService'
 
 const Explore = () => {
     const user = useUserStore((state) => state.user)
-    const { height, width } = useWindowDimensions()
+    const { height } = useWindowDimensions()
     const router = useRouter()
 
     const [posts, setPosts] = useState<Post[]>([])
     const [loadingPosts, setLoadingPosts] = useState(false)
-
-    // ✅ Track saved post IDs
     const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set())
-
-    // ✅ Track liked post IDs
     const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set())
-
-    // ✅ Track like counts per post
     const [likeCounts, setLikeCounts] = useState<Record<string, number>>({})
 
-    const [showToast, setShowToast] = useState(false)
-    const slideAnim = useRef(new Animated.Value(-100)).current
+    // ✅ Search state
+    const [searchQuery, setSearchQuery] = useState('')
+
+    // ✅ Two separate toasts
+    const [showSaveToast, setShowSaveToast] = useState(false)
+    const [showDeleteToast, setShowDeleteToast] = useState(false)
+    const saveSlideAnim = useRef(new Animated.Value(-100)).current
+    const deleteSlideAnim = useRef(new Animated.Value(-100)).current
 
     useEffect(() => {
         fetchPosts()
@@ -38,19 +38,12 @@ const Explore = () => {
             const data = await getPosts()
             setPosts(data)
 
-            // ✅ Pre-populate saved state from API
-            const alreadySaved = new Set(
-                data.filter(p => p.savedByMe).map(p => p.id)
-            )
+            const alreadySaved = new Set(data.filter(p => p.savedByMe).map(p => p.id))
             setSavedPostIds(alreadySaved)
 
-            // ✅ Pre-populate liked state from API
-            const alreadyLiked = new Set(
-                data.filter(p => p.likedByMe).map(p => p.id)
-            )
+            const alreadyLiked = new Set(data.filter(p => p.likedByMe).map(p => p.id))
             setLikedPostIds(alreadyLiked)
 
-            // ✅ Pre-populate like counts from API
             const counts: Record<string, number> = {}
             data.forEach(p => { counts[p.id] = p.likeCount })
             setLikeCounts(counts)
@@ -62,34 +55,67 @@ const Explore = () => {
         }
     }
 
-    // ─── SAVE HANDLER ────────────────────────────────────────────────────────
+    // ✅ Filter posts by title or authorName based on searchQuery
+    const filteredPosts = posts.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.authorName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    // ─── SAVE / UNSAVE ────────────────────────────────────────────────────────
     const handleSavePost = async (postId: string) => {
+        const isSaved = savedPostIds.has(postId)
         try {
-            const response = await savePost(postId)
-            setSavedPostIds(prev => {
-                const updated = new Set(prev)
-                if (response.savedByMe) {
-                    updated.add(postId)
-                } else {
+            if (isSaved) {
+                await unsavePost(postId)
+                setSavedPostIds(prev => {
+                    const updated = new Set(prev)
                     updated.delete(postId)
-                }
-                return updated
-            })
-            if (response.savedByMe) showSavedToast()
+                    return updated
+                })
+            } else {
+                await savePost(postId)
+                setSavedPostIds(prev => {
+                    const updated = new Set(prev)
+                    updated.add(postId)
+                    return updated
+                })
+                triggerSaveToast()
+            }
         } catch (error: any) {
             handleAuthError(error)
         }
     }
 
-    // ─── LIKE HANDLER ────────────────────────────────────────────────────────
+    // ─── DELETE ───────────────────────────────────────────────────────────────
+    const handleDeletePost = (postId: string) => {
+        Alert.alert(
+            'Delete Post',
+            'Are you sure you want to delete this post?',
+            [
+                { text: 'No', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deletePost(postId)
+                            setPosts(prev => prev.filter(p => p.id !== postId))
+                            triggerDeleteToast()
+                        } catch (error: any) {
+                            handleAuthError(error)
+                        }
+                    }
+                }
+            ]
+        )
+    }
+
+    // ─── LIKE ─────────────────────────────────────────────────────────────────
     const handleLikePost = async (postId: string) => {
         const isLiked = likedPostIds.has(postId)
-
         try {
             let response
-
             if (isLiked) {
-                // ✅ Unlike the post
                 response = await unlikePost(postId)
                 setLikedPostIds(prev => {
                     const updated = new Set(prev)
@@ -97,7 +123,6 @@ const Explore = () => {
                     return updated
                 })
             } else {
-                // ✅ Like the post
                 response = await likePost(postId)
                 setLikedPostIds(prev => {
                     const updated = new Set(prev)
@@ -105,45 +130,29 @@ const Explore = () => {
                     return updated
                 })
             }
-
-            // ✅ Update like count from API response
-            setLikeCounts(prev => ({
-                ...prev,
-                [postId]: response.likeCount
-            }))
-
+            setLikeCounts(prev => ({ ...prev, [postId]: response.likeCount }))
         } catch (error: any) {
             handleAuthError(error)
         }
     }
 
-    // ─── SHARE HANDLER ───────────────────────────────────────────────────────
+    // ─── SHARE ────────────────────────────────────────────────────────────────
     const handleSharePost = async (postId: string, postTitle: string) => {
         try {
-            // ✅ Call the API to record the share
             await sharePost(postId, 'Loved this — had to share.')
-
-            // ✅ Open native share sheet
             await Share.share({
                 message: `Check out this post: "${postTitle}"`,
                 title: postTitle,
             })
-
-            // ✅ Update share count locally
             setPosts(prev =>
-                prev.map(p =>
-                    p.id === postId
-                        ? { ...p, shareCount: p.shareCount + 1 }
-                        : p
-                )
+                prev.map(p => p.id === postId ? { ...p, shareCount: p.shareCount + 1 } : p)
             )
-
         } catch (error: any) {
             handleAuthError(error)
         }
     }
 
-    // ─── AUTH ERROR HANDLER ──────────────────────────────────────────────────
+    // ─── AUTH ERROR ───────────────────────────────────────────────────────────
     const handleAuthError = (error: any) => {
         if (error.message.includes('token') || error.message.includes('expired')) {
             Alert.alert('Session Expired', 'Please log in again', [
@@ -154,120 +163,169 @@ const Explore = () => {
         }
     }
 
-    // ─── TOAST ───────────────────────────────────────────────────────────────
-    const showSavedToast = () => {
-        setShowToast(true)
+    // ─── TOASTS ───────────────────────────────────────────────────────────────
+    const triggerSaveToast = () => {
+        setShowSaveToast(true)
         Animated.sequence([
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }),
+            Animated.timing(saveSlideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
             Animated.delay(3000),
-            Animated.timing(slideAnim, {
-                toValue: -100,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-        ]).start(() => setShowToast(false))
+            Animated.timing(saveSlideAnim, { toValue: -100, duration: 300, useNativeDriver: true }),
+        ]).start(() => setShowSaveToast(false))
     }
 
-    // ─── POST CARD ───────────────────────────────────────────────────────────
-    const renderPost = ({ item }: { item: Post }) => (
-        <View style={styles.card}>
-            <View style={styles.cont}>
-                <View style={styles.username}>
-                    <View style={{
-                        width: 45, height: 45,
-                        borderRadius: 100,
-                        overflow: 'hidden',
-                        backgroundColor: '#d1d1d1'
-                    }}>
-                        <Image
-                            source={require('@/assets/images/Man Potrait Image.jpg')}
-                            style={{ width: '100%', height: '100%' }}
-                        />
+    const triggerDeleteToast = () => {
+        setShowDeleteToast(true)
+        Animated.sequence([
+            Animated.timing(deleteSlideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+            Animated.delay(3000),
+            Animated.timing(deleteSlideAnim, { toValue: -100, duration: 300, useNativeDriver: true }),
+        ]).start(() => setShowDeleteToast(false))
+    }
+
+    // ─── POST CARD ────────────────────────────────────────────────────────────
+    const renderPost = ({ item }: { item: Post }) => {
+
+        // ✅ Check if this post belongs to the logged in user
+        const isMyPost = item.authorId === user?.id
+
+        return (
+            <TouchableOpacity
+                onPress={() => router.push(`/postPreview?id=${item.id}`)}
+                activeOpacity={0.95}
+            >
+                <View style={styles.card}>
+                    <View style={styles.cont}>
+                        <View style={styles.username}>
+                            <View style={{
+                                width: 45, height: 45,
+                                borderRadius: 100,
+                                overflow: 'hidden',
+                                backgroundColor: '#d1d1d1'
+                            }}>
+                                <Image
+                                    source={require('@/assets/images/Man Potrait Image.jpg')}
+                                    style={{ width: '100%', height: '100%' }}
+                                />
+                            </View>
+                            <Text style={{ fontSize: 16, fontWeight: '600', lineHeight: 24, color: '#3e3f40' }}>
+                                {item.authorName}
+                            </Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+
+                            {/* Bookmark */}
+                            <TouchableOpacity
+                                onPress={(e) => {
+                                    e.stopPropagation()
+                                    handleSavePost(item.id)
+                                }}
+                            >
+                                <Ionicons
+                                    name={savedPostIds.has(item.id) ? 'bookmark' : 'bookmark-outline'}
+                                    size={24}
+                                    color='dodgerblue'
+                                />
+                            </TouchableOpacity>
+
+                            {/* ✅ Delete icon — only shows on YOUR posts */}
+                            {isMyPost && (
+                                <TouchableOpacity
+                                    onPress={(e) => {
+                                        e.stopPropagation()
+                                        handleDeletePost(item.id)
+                                    }}
+                                >
+                                    <Ionicons name='trash-outline' size={24} color='tomato' />
+                                </TouchableOpacity>
+                            )}
+
+                        </View>
                     </View>
-                    <Text style={{ fontSize: 16, fontWeight: '600', lineHeight: 24, color: '#3e3f40' }}>
-                        {item.authorName}
+
+                    <Text style={styles.title}>{item.title}</Text>
+                    <Text style={styles.body}>
+                        {item.content.length > 120
+                            ? item.content.substring(0, 120) + '.....'
+                            : item.content
+                        }
                     </Text>
+
+                    {item.imageUrl ? (
+                        <View style={{
+                            height: height * 0.3,
+                            width: '100%',
+                            marginTop: 12,
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                        }}>
+                            <Image
+                                source={{ uri: item.imageUrl }}
+                                style={{ width: '100%', height: '100%' }}
+                                resizeMode='cover'
+                                onError={(e) => console.log('❌ Image failed to load:', e.nativeEvent.error)}
+                            />
+                        </View>
+                    ) : null}
+
+                    <View style={{ padding: 8, flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+
+                        <View style={styles.views}>
+                            <Ionicons name='eye-outline' size={24} color='dodgerblue' />
+                            <Text>{item.viewCount}</Text>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.likes}
+                            activeOpacity={0.7}
+                            onPress={(e) => {
+                                e.stopPropagation()
+                                handleLikePost(item.id)
+                            }}
+                        >
+                            <Ionicons
+                                name={likedPostIds.has(item.id) ? 'heart' : 'heart-outline'}
+                                size={24}
+                                color={likedPostIds.has(item.id) ? 'tomato' : 'dodgerblue'}
+                            />
+                            <Text>{likeCounts[item.id] ?? item.likeCount}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.share}
+                            activeOpacity={0.7}
+                            onPress={(e) => {
+                                e.stopPropagation()
+                                handleSharePost(item.id, item.title)
+                            }}
+                        >
+                            <Ionicons name='share-outline' size={24} color='dodgerblue' />
+                            <Text>{item.shareCount}</Text>
+                        </TouchableOpacity>
+
+                    </View>
                 </View>
-
-                {/* Bookmark */}
-                <TouchableOpacity onPress={() => handleSavePost(item.id)}>
-                    <Ionicons
-                        name={savedPostIds.has(item.id) ? 'bookmark' : 'bookmark-outline'}
-                        size={28}
-                        color='dodgerblue'
-                    />
-                </TouchableOpacity>
-            </View>
-
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.body}>
-                {item.content.length > 120
-                    ? item.content.substring(0, 120) + '.....'
-                    : item.content
-                }
-            </Text>
-
-            {item.imageUrl ? (
-                <View style={{ height: height * 0.3, marginTop: 8 }}>
-                    <Image
-                        source={{ uri: item.imageUrl }}
-                        style={{ height: height * 0.3, width: width * 0.83, borderRadius: 4 }}
-                        resizeMode='cover'
-                    />
-                </View>
-            ) : null}
-
-            {/* Engagements */}
-            <View style={{ padding: 8, flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-
-                {/* ✅ Views — read only, no tap action */}
-                <View style={styles.views}>
-                    <Ionicons name='eye-outline' size={24} color='dodgerblue' />
-                    <Text>{item.viewCount}</Text>
-                </View>
-
-                {/* ✅ Likes — toggles like/unlike, icon fills on like */}
-                <TouchableOpacity
-                    style={styles.likes}
-                    activeOpacity={0.7}
-                    onPress={() => handleLikePost(item.id)}
-                >
-                    <Ionicons
-                        name={likedPostIds.has(item.id) ? 'heart' : 'heart-outline'}
-                        size={24}
-                        color={likedPostIds.has(item.id) ? 'tomato' : 'dodgerblue'}   // ✅ tomato when liked
-                    />
-                    <Text>{likeCounts[item.id] ?? item.likeCount}</Text>
-                </TouchableOpacity>
-
-                {/* ✅ Share — calls API and opens native share sheet */}
-                <TouchableOpacity
-                    style={styles.share}
-                    activeOpacity={0.7}
-                    onPress={() => handleSharePost(item.id, item.title)}
-                >
-                    <Ionicons name='share-outline' size={24} color='dodgerblue' />
-                    <Text>{item.shareCount}</Text>
-                </TouchableOpacity>
-
-            </View>
-        </View>
-    )
+            </TouchableOpacity>
+        )
+    }
 
     return (
         <SafeAreaView style={{ padding: 16, flex: 1 }}>
 
-            {/* Toast */}
-            {showToast && (
-                <Animated.View style={[styles.toast, { transform: [{ translateY: slideAnim }] }]}>
+            {/* Save Toast — green */}
+            {showSaveToast && (
+                <Animated.View style={[styles.toast, styles.saveToast, { transform: [{ translateY: saveSlideAnim }] }]}>
                     <Text style={styles.toastText}>Post saved successfully</Text>
                     <TouchableOpacity onPress={() => router.push('/(tabs)/saved')}>
                         <Text style={styles.toastCTA}>View post</Text>
                     </TouchableOpacity>
+                </Animated.View>
+            )}
+
+            {/* Delete Toast — tomato */}
+            {showDeleteToast && (
+                <Animated.View style={[styles.toast, styles.deleteToast, { transform: [{ translateY: deleteSlideAnim }] }]}>
+                    <Text style={styles.toastText}>Post deleted successfully</Text>
                 </Animated.View>
             )}
 
@@ -298,22 +356,37 @@ const Explore = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Search bar */}
+            {/* ✅ Search bar — now functional */}
             <View style={styles.homeSearch}>
                 <Ionicons name='search' size={20} color='#808289' />
                 <TextInput
                     style={{ flex: 1, padding: 0, includeFontPadding: false }}
-                    placeholder='search title here'
+                    placeholder='search by title or username...'
                     placeholderTextColor='#808289'
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}   // ✅ updates searchQuery as user types
                 />
+                {/* ✅ Clear button — shows when user has typed something */}
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Ionicons name='close-circle' size={18} color='#808289' />
+                    </TouchableOpacity>
+                )}
             </View>
 
-            {/* Posts */}
+            {/* ✅ Show search result count when searching */}
+            {searchQuery.length > 0 && (
+                <Text style={{ color: '#6a6a6a', fontSize: 13, marginBottom: 8, marginTop: 4 }}>
+                    {filteredPosts.length} result{filteredPosts.length !== 1 ? 's' : ''} for "{searchQuery}"
+                </Text>
+            )}
+
+            {/* Posts — uses filteredPosts instead of posts */}
             {loadingPosts ? (
                 <ActivityIndicator size='large' color='dodgerblue' style={{ marginTop: 48 }} />
             ) : (
                 <FlatList
-                    data={posts}
+                    data={filteredPosts}     // ✅ filtered list — not raw posts
                     keyExtractor={(item) => item.id}
                     renderItem={renderPost}
                     showsVerticalScrollIndicator={false}
@@ -322,9 +395,13 @@ const Explore = () => {
                     refreshing={loadingPosts}
                     ListEmptyComponent={
                         <View style={{ alignItems: 'center', marginTop: 80, gap: 8 }}>
-                            <Ionicons name='document-outline' size={48} color='#d1d1d1' />
-                            <Text style={{ color: '#6a6a6a', fontSize: 16 }}>No posts yet</Text>
-                            <Text style={{ color: '#a0a0a0', fontSize: 14 }}>Be the first to create a post!</Text>
+                            <Ionicons name='search-outline' size={48} color='#d1d1d1' />
+                            <Text style={{ color: '#6a6a6a', fontSize: 16 }}>
+                                {searchQuery.length > 0 ? `No results for "${searchQuery}"` : 'No posts yet'}
+                            </Text>
+                            <Text style={{ color: '#a0a0a0', fontSize: 14 }}>
+                                {searchQuery.length > 0 ? 'Try a different title or username' : 'Be the first to create a post!'}
+                            </Text>
                         </View>
                     }
                 />
@@ -357,17 +434,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderRadius: 100,
     },
-    name: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        lineHeight: 24,
-    },
-    message: {
-        fontSize: 14,
-        lineHeight: 21,
-        color: '#6a6a6a',
-        fontWeight: '500',
-    },
+    name: { fontSize: 16, fontWeight: 'bold', lineHeight: 24 },
+    message: { fontSize: 14, lineHeight: 21, color: '#6a6a6a', fontWeight: '500' },
     homeSearch: {
         borderWidth: 0.5,
         borderColor: '#b1b2b6',
@@ -394,29 +462,10 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         elevation: 4,
     },
-    username: {
-        flexDirection: 'row',
-        gap: 12,
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
-    cont: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    title: {
-        fontSize: 16,
-        lineHeight: 24,
-        fontWeight: '700',
-        marginTop: 16,
-    },
-    body: {
-        fontSize: 16,
-        lineHeight: 24,
-        fontWeight: '400',
-        marginTop: 16,
-        color: '#636567',
-    },
+    username: { flexDirection: 'row', gap: 12, alignItems: 'center', overflow: 'hidden' },
+    cont: { flexDirection: 'row', justifyContent: 'space-between' },
+    title: { fontSize: 16, lineHeight: 24, fontWeight: '700', marginTop: 16 },
+    body: { fontSize: 16, lineHeight: 24, fontWeight: '400', marginTop: 16, color: '#636567' },
     views: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     likes: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     share: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -425,12 +474,10 @@ const styles = StyleSheet.create({
         top: 0,
         left: 16,
         right: 16,
-        backgroundColor: 'green',
         borderRadius: 12,
         paddingVertical: 24,
         paddingHorizontal: 16,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
         zIndex: 999,
         shadowColor: '#000',
@@ -439,6 +486,14 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 10,
         marginTop: 52,
+    },
+    saveToast: {
+        backgroundColor: 'green',
+        justifyContent: 'space-between',
+    },
+    deleteToast: {
+        backgroundColor: 'tomato',
+        justifyContent: 'center',
     },
     toastText: { color: '#ffffff', fontSize: 14, fontWeight: '500' },
     toastCTA: { color: '#f9f9f9', fontSize: 14, fontWeight: '700' },

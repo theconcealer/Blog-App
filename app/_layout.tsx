@@ -9,6 +9,8 @@ export default function Rootlayout()  {
       <Stack.Screen name= "index" options={{headerShown: false}}/>
 
       <Stack.Screen name='createPost' options={{headerShown: false}}/>
+
+      <Stack.Screen name='postPreview' options={{headerShown: false}}/>
       
 
       <Stack.Screen name="(tabs)" options={{headerShown: false}}/>

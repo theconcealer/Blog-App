@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 
 const search = () => {
+
+  
+
   return (
     <SafeAreaView style={{
       padding: 16,
